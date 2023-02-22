@@ -6,6 +6,51 @@ import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
 
+enum SnakeDirection {
+  up,
+  down,
+  left,
+  right,
+}
+
+enum BoardTileType {
+  empty,
+  snakeHead,
+  snakeBody,
+  snakeTail,
+  food,
+}
+
+extension BoardTileBody on BoardTileType {
+  bool get isSnake =>
+      this == BoardTileType.snakeHead ||
+      this == BoardTileType.snakeBody ||
+      this == BoardTileType.snakeTail ||
+      this == BoardTileType.food;
+
+  String get bodyPartAssetUrl {
+    switch (this) {
+      case BoardTileType.snakeHead:
+        return 'assets/front.png';
+      case BoardTileType.snakeBody:
+        return 'assets/body.png';
+      case BoardTileType.snakeTail:
+        return 'assets/tail.png';
+      case BoardTileType.food:
+        return 'assets/pallet.png';
+      default:
+        return '';
+    }
+  }
+}
+
+extension SnakeDirectionText on SnakeDirection {
+  bool get isDown => this == SnakeDirection.down;
+  bool get isUp => this == SnakeDirection.up;
+  bool get isLeft => this == SnakeDirection.left;
+  bool get isRight => this == SnakeDirection.right;
+}
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -23,12 +68,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   static List<int> snakePosition = [45, 65, 85, 105, 125];
-  static int numberOfSquares = 540;
-  int numberInRow = 20;
+  static int numberOfSquares = 100;
+  int numberInRow = 10;
   bool gameHasStarted = false;
 
   static var randomNumber = Random();
   int food = randomNumber.nextInt(numberOfSquares - 1);
+
   void generateNewFood() {
     food = randomNumber.nextInt(numberOfSquares - 1);
   }
@@ -36,7 +82,7 @@ class _HomePageState extends State<HomePage> {
   void startGame() {
     gameHasStarted = true;
     snakePosition = [45, 65, 85, 105, 125];
-    const duration = const Duration(milliseconds: 150);
+    const duration = Duration(milliseconds: 150);
     Timer.periodic(duration, (Timer timer) {
       updateSnake();
       if (gameOver()) {
@@ -46,47 +92,39 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  var direction = 'down';
+  SnakeDirection direction = SnakeDirection.down;
   void updateSnake() {
     setState(() {
-      switch (direction) {
-        case 'down':
-          if (snakePosition.last > numberOfSquares - numberInRow) {
-            snakePosition
-                .add(snakePosition.last + numberInRow - numberOfSquares);
-          } else {
-            snakePosition.add(snakePosition.last + numberInRow);
-          }
+      if (direction.isDown) {
+        if (snakePosition.last > numberOfSquares - numberInRow) {
+          snakePosition.add(snakePosition.last + numberInRow - numberOfSquares);
+        } else {
+          snakePosition.add(snakePosition.last + numberInRow);
+        }
+      }
 
-          break;
+      if (direction.isUp) {
+        if (snakePosition.last < numberInRow) {
+          snakePosition.add(snakePosition.last - numberInRow + numberOfSquares);
+        } else {
+          snakePosition.add(snakePosition.last - numberInRow);
+        }
+      }
 
-        case 'up':
-          if (snakePosition.last < numberInRow) {
-            snakePosition
-                .add(snakePosition.last - numberInRow + numberOfSquares);
-          } else {
-            snakePosition.add(snakePosition.last - numberInRow);
-          }
-          break;
+      if (direction.isLeft) {
+        if (snakePosition.last % numberInRow == 0) {
+          snakePosition.add(snakePosition.last - 1 + numberInRow);
+        } else {
+          snakePosition.add(snakePosition.last - 1);
+        }
+      }
 
-        case 'left':
-          if (snakePosition.last % numberInRow == 0) {
-            snakePosition.add(snakePosition.last - 1 + numberInRow);
-          } else {
-            snakePosition.add(snakePosition.last - 1);
-          }
-
-          break;
-
-        case 'right':
-          if ((snakePosition.last + 1) % numberInRow == 0) {
-            snakePosition.add(snakePosition.last + 1 - numberInRow);
-          } else {
-            snakePosition.add(snakePosition.last + 1);
-          }
-          break;
-
-        default:
+      if (direction.isRight) {
+        if ((snakePosition.last + 1) % numberInRow == 0) {
+          snakePosition.add(snakePosition.last + 1 - numberInRow);
+        } else {
+          snakePosition.add(snakePosition.last + 1);
+        }
       }
 
       if (snakePosition.last == food) {
@@ -117,11 +155,11 @@ class _HomePageState extends State<HomePage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('GAME OVER'),
-            content: Text('You\'re score: ' + snakePosition.length.toString()),
+            title: const Text('GAME OVER'),
+            content: Text('You\'re score: ${snakePosition.length}'),
             actions: <Widget>[
               ElevatedButton(
-                child: Text('Play Again'),
+                child: const Text('Play Again'),
                 onPressed: () {
                   startGame();
                   Navigator.of(context).pop();
@@ -136,65 +174,69 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       //appBar: AppBar(),
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: Center(
-        child: Container(
-          width: 400,
+        child: SizedBox(
+          width: double.infinity,
           child: Column(
             children: <Widget>[
               Expanded(
                 child: GestureDetector(
                   onVerticalDragUpdate: (details) {
-                    if (direction != 'up' && details.delta.dy > 0) {
-                      direction = 'down';
-                    } else if (direction != 'down' && details.delta.dy < 0) {
-                      direction = 'up';
+                    if (!direction.isUp && details.delta.dy > 0) {
+                      direction = SnakeDirection.down;
+                    } else if (!direction.isDown && details.delta.dy < 0) {
+                      direction = SnakeDirection.up;
                     }
                   },
                   onHorizontalDragUpdate: (details) {
-                    if (direction != 'left' && details.delta.dx > 0) {
-                      direction = 'right';
-                    } else if (direction != 'right' && details.delta.dx < 0) {
-                      direction = 'left';
+                    if (!direction.isLeft && details.delta.dx > 0) {
+                      direction = SnakeDirection.right;
+                    } else if (!direction.isRight && details.delta.dx < 0) {
+                      direction = SnakeDirection.left;
                     }
                   },
-                  child: Container(
-                    child: GridView.builder(
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: numberOfSquares,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: numberInRow),
-                        itemBuilder: (BuildContext context, int index) {
-                          if (snakePosition.contains(index)) {
-                            return Center(
-                              child: Container(
-                                padding: EdgeInsets.all(2),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: Container(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
+                  child: GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: numberOfSquares,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: numberInRow),
+                      itemBuilder: (BuildContext context, int index) {
+                        if (snakePosition.contains(index)) {
+                          // Check if this is the head of snake
+                          if (index == snakePosition.last) {
+                            return BoardTile(
+                              isOdd: index.isOdd,
+                              boardTileType: BoardTileType.snakeHead,
                             );
                           }
-                          if (index == food) {
-                            return Container(
-                              padding: EdgeInsets.all(2),
-                              child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: Container(color: Colors.green)),
-                            );
-                          } else {
-                            return Container(
-                              padding: EdgeInsets.all(2),
-                              child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: Container(color: Colors.grey[900])),
+
+                          // Check if this is the tail of snake
+                          if (index == snakePosition.first) {
+                            return BoardTile(
+                              isOdd: index.isOdd,
+                              boardTileType: BoardTileType.snakeTail,
                             );
                           }
-                        }),
-                  ),
+
+                          return BoardTile(
+                            isOdd: index.isOdd,
+                            boardTileType: BoardTileType.snakeBody,
+                          );
+                        }
+
+                        if (index == food) {
+                          return BoardTile(
+                            isOdd: index.isOdd,
+                            boardTileType: BoardTileType.food,
+                          );
+                        } else {
+                          return BoardTile(
+                            isOdd: index.isOdd,
+                            boardTileType: BoardTileType.empty,
+                          );
+                        }
+                      }),
                 ),
               ),
               Padding(
@@ -209,18 +251,42 @@ class _HomePageState extends State<HomePage> {
                           startGame();
                         }
                       },
-                      child: Text(
+                      child: const Text(
                         's t a r t',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
+                        style: TextStyle(color: Colors.grey, fontSize: 20),
                       ),
                     ),
-                
                   ],
                 ),
               )
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class BoardTile extends StatelessWidget {
+  const BoardTile({
+    Key? key,
+    required this.isOdd,
+    required this.boardTileType,
+  }) : super(key: key);
+
+  final bool isOdd;
+  final BoardTileType boardTileType;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(5),
+        child: Container(
+            color: isOdd ? Colors.blueGrey : Colors.grey,
+            child: boardTileType.isSnake
+                ? Image(image: AssetImage(boardTileType.bodyPartAssetUrl))
+                : null),
       ),
     );
   }
