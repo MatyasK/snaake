@@ -8,6 +8,7 @@ import 'package:snaake/start_game_button.dart';
 import 'package:snaake/utils/consts.dart';
 
 import 'board.dart';
+import 'game_over_dialog.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -140,40 +141,22 @@ class _HomePageState extends State<HomePage> {
 
   void _showGameOverPopUp() {
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('ChainCargo Snake'),
-                const SizedBox(height: 10),
-                const Text('GameOver'),
-                const SizedBox(height: 10),
-                const Text('Your score'),
-                Text('${snakePosition.length - 5}'),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      snakePosition.length = 5;
-                      snakePosition = [0, 1, 2, 3, 4];
-                      startGame();
-                    },
-                    child: const Text('Try Again')),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-
-                      snakePosition.length = 5;
-                      snakePosition = [0, 1, 2, 3, 4];
-                      startGame();
-                    },
-                    child: const Text('Quite Game')),
-              ],
-            ),
-          );
-        });
+      context: context,
+      builder: (BuildContext context) => GameOverDialog(
+        score: '${snakePosition.length - 5}',
+        onPlayAgain: () {
+          Navigator.of(context).pop();
+          snakePosition.length = 5;
+          snakePosition = [0, 1, 2, 3, 4];
+          startGame();
+        },
+        onQuit: () {
+          //TODO: move to real app
+        },
+      ),
+    );
   }
+
 
   @override
   Widget build(BuildContext context) {
