@@ -3,71 +3,23 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:snaake/snake.dart';
+import 'package:snaake/start_game_button.dart';
+import 'package:snaake/utils/consts.dart';
 
-void main() => runApp(MyApp());
+import 'board.dart';
 
-enum SnakeDirection {
-  up,
-  down,
-  left,
-  right,
-}
-
-enum BoardTileType {
-  empty,
-  snakeHead,
-  snakeBody,
-  snakeTail,
-  food,
-}
-
-class Observer extends BlocObserver {
-  /// {@macro counter_observer}
-  const Observer();
-
-  @override
-  void onChange(BlocBase<dynamic> bloc, Change<dynamic> change) {
-    super.onChange(bloc, change);
-    // ignore: avoid_print
-    print('${bloc.runtimeType} $change');
-  }
-}
-
-extension BoardTileBody on BoardTileType {
-  bool get isSnake =>
-      this == BoardTileType.snakeHead ||
-      this == BoardTileType.snakeBody ||
-      this == BoardTileType.snakeTail ||
-      this == BoardTileType.food;
-
-  String get bodyPartAssetUrl {
-    switch (this) {
-      case BoardTileType.snakeHead:
-        return 'assets/front.png';
-      case BoardTileType.snakeBody:
-        return 'assets/body.png';
-      case BoardTileType.snakeTail:
-        return 'assets/tail.png';
-      case BoardTileType.food:
-        return 'assets/pallet.png';
-      default:
-        return '';
-    }
-  }
-}
-
-extension SnakeDirectionText on SnakeDirection {
-  bool get isDown => this == SnakeDirection.down;
-  bool get isUp => this == SnakeDirection.up;
-  bool get isLeft => this == SnakeDirection.left;
-  bool get isRight => this == SnakeDirection.right;
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: HomePage(),
     );
@@ -75,29 +27,28 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  static List<int> snakePosition = [45, 65, 85, 105, 125];
-  static int numberOfSquares = 100;
+  static List<int> snakePosition = [0, 1, 2, 3, 4];
+  static final randomNumber = Random();
+  SnakeDirection direction = SnakeDirection.right;
   int columnCount = 10;
   bool gameHasStarted = false;
-  int currentRow = 0;
-  Timer? timer;
-  static var randomNumber = Random();
-  int food = randomNumber.nextInt(numberOfSquares - 1);
+
+  int food = randomNumber.nextInt(Consts.numberOfSquares - 1);
 
   void generateNewFood() {
-    food = randomNumber.nextInt(numberOfSquares - 1);
+    food = randomNumber.nextInt(Consts.numberOfSquares - 1);
   }
 
   void startGame() {
     gameHasStarted = true;
-    snakePosition = [45, 65, 85, 105, 125];
-    const duration = Duration(milliseconds: 150);
-    timer = Timer.periodic(duration, (Timer timer) {
+    Timer.periodic(const Duration(milliseconds: 150), (timer) {
       updateSnake();
       if (gameOver()) {
         timer.cancel();
@@ -130,33 +81,35 @@ class _HomePageState extends State<HomePage> {
   SnakeDirection direction = SnakeDirection.down;
   void updateSnake() {
     setState(() {
-      if (direction.isDown) {
-        if (snakePosition.last > numberOfSquares - columnCount) {
-          snakePosition.add(snakePosition.last + columnCount - numberOfSquares);
+      if (direction == SnakeDirection.down) {
+        if (snakePosition.last > Consts.numberOfSquares - Consts.rowCount) {
+          snakePosition.add(
+              snakePosition.last + Consts.rowCount - Consts.numberOfSquares);
         } else {
-          snakePosition.add(snakePosition.last + columnCount);
+          snakePosition.add(snakePosition.last + Consts.rowCount);
         }
       }
 
       if (direction.isUp) {
-        if (snakePosition.last < columnCount) {
-          snakePosition.add(snakePosition.last - columnCount + numberOfSquares);
+        if (snakePosition.last < Consts.rowCount) {
+          snakePosition.add(
+              snakePosition.last - Consts.rowCount + Consts.numberOfSquares);
         } else {
-          snakePosition.add(snakePosition.last - columnCount);
+          snakePosition.add(snakePosition.last - Consts.rowCount);
         }
       }
 
       if (direction.isLeft) {
-        if (snakePosition.last % columnCount == 0) {
-          snakePosition.add(snakePosition.last - 1 + columnCount);
+        if (snakePosition.last % Consts.rowCount == 0) {
+          snakePosition.add(snakePosition.last - 1 + Consts.rowCount);
         } else {
           snakePosition.add(snakePosition.last - 1);
         }
       }
 
       if (direction.isRight) {
-        if ((snakePosition.last + 1) % columnCount == 0) {
-          snakePosition.add(snakePosition.last + 1 - columnCount);
+        if ((snakePosition.last + 1) % Consts.rowCount == 0) {
+          snakePosition.add(snakePosition.last + 1 - Consts.rowCount);
         } else {
           snakePosition.add(snakePosition.last + 1);
         }
@@ -342,34 +295,27 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               )
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: Consts.numberOfSquares,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: Consts.rowCount,
+                    ),
+                    itemBuilder: (context, index) => createTile(
+                      snakePosition: snakePosition,
+                      index: index,
+                      food: food,
+                      direction: direction
+                    ),
+                  ),
+                ),
+              ),
+              StartGameButton(onPress: (!gameHasStarted) ? startGame : () {})
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class BoardTile extends StatelessWidget {
-  const BoardTile({
-    Key? key,
-    required this.isOdd,
-    required this.boardTileType,
-  }) : super(key: key);
-
-  final bool isOdd;
-  final BoardTileType boardTileType;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ClipRRect(
-        // borderRadius: BorderRadius.circular(5),
-        child: Container(
-            color: isOdd ? Colors.blueGrey : Colors.grey,
-            child: boardTileType.isSnake
-                ? Image(image: AssetImage(boardTileType.bodyPartAssetUrl))
-                : null),
       ),
     );
   }
