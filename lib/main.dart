@@ -37,9 +37,11 @@ class _HomePageState extends State<HomePage> {
   static List<int> snakePosition = [0, 1, 2, 3, 4];
   static final randomNumber = Random();
   SnakeDirection direction = SnakeDirection.right;
-  int columnCount = 10;
   bool gameHasStarted = false;
+  int columnCount = 10;
 
+
+  Timer? timer;
   int food = randomNumber.nextInt(Consts.numberOfSquares - 1);
 
   void generateNewFood() {
@@ -78,7 +80,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  SnakeDirection direction = SnakeDirection.down;
   void updateSnake() {
     setState(() {
       if (direction == SnakeDirection.down) {
@@ -222,59 +223,21 @@ class _HomePageState extends State<HomePage> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: numberOfSquares,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: columnCount),
-                        itemBuilder: (BuildContext context, int index) {
-                          if (index % columnCount == 0) {
-                            currentRow += 1;
-                          }
-                          bool isGrey = (index % 2 == 0) ? true : false;
-
-                          if (currentRow.isOdd) {
-                            isGrey = !isGrey;
-                          }
-                          // reverse value on every other row
-
-                          if (snakePosition.contains(index)) {
-                            // Check if this is the head of snake
-                            if (index == snakePosition.last) {
-                              return BoardTile(
-                                isOdd: isGrey,
-                                boardTileType: BoardTileType.snakeHead,
-                              );
-                            }
-
-                            // Check if this is the tail of snake
-                            if (index == snakePosition.first) {
-                              return BoardTile(
-                                isOdd: isGrey,
-                                boardTileType: BoardTileType.snakeTail,
-                              );
-                            }
-
-                            return BoardTile(
-                              isOdd: isGrey,
-                              boardTileType: BoardTileType.snakeBody,
-                            );
-                          }
-
-                          if (index == food) {
-                            return BoardTile(
-                              isOdd: isGrey,
-                              boardTileType: BoardTileType.food,
-                            );
-                          } else {
-                            return BoardTile(
-                              isOdd: isGrey,
-                              boardTileType: BoardTileType.empty,
-                            );
-                          }
-                        }),
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: Consts.numberOfSquares,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: Consts.rowCount,
+                      ),
+                      itemBuilder: (BuildContext context, int index) =>
+                          createTile(
+                              snakePosition: snakePosition,
+                              index: index,
+                              food: food,
+                              direction: direction),
+                    ),
                   ),
                 ),
-              ),
+              ),/*
               Padding(
                 padding: const EdgeInsets.only(
                     bottom: 20.0, left: 20.0, right: 20.0),
@@ -294,8 +257,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-              )
-                  child: GridView.builder(
+              ),*/
+              /* child: GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: Consts.numberOfSquares,
@@ -310,8 +273,7 @@ class _HomePageState extends State<HomePage> {
                       direction: direction
                     ),
                   ),
-                ),
-              ),
+                ),*/
               StartGameButton(onPress: (!gameHasStarted) ? startGame : () {})
             ],
           ),
