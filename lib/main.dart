@@ -40,7 +40,6 @@ class _HomePageState extends State<HomePage> {
   bool gameHasStarted = false;
   int columnCount = 10;
 
-
   Timer? timer;
   int food = randomNumber.nextInt(Consts.numberOfSquares - 1);
 
@@ -156,12 +155,17 @@ class _HomePageState extends State<HomePage> {
                 ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
+                      snakePosition.length = 5;
+                      snakePosition = [0, 1, 2, 3, 4];
                       startGame();
                     },
                     child: const Text('Try Again')),
                 ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
+
+                      snakePosition.length = 5;
+                      snakePosition = [0, 1, 2, 3, 4];
                       startGame();
                     },
                     child: const Text('Quite Game')),
@@ -225,55 +229,19 @@ class _HomePageState extends State<HomePage> {
                     child: GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: Consts.numberOfSquares,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: Consts.rowCount,
                       ),
-                      itemBuilder: (BuildContext context, int index) =>
-                          createTile(
-                              snakePosition: snakePosition,
-                              index: index,
-                              food: food,
-                              direction: direction),
+                      itemBuilder: (context, index) => createTile(
+                          snakePosition: snakePosition,
+                          index: index,
+                          food: food,
+                          direction: direction),
                     ),
                   ),
                 ),
-              ),/*
-              Padding(
-                padding: const EdgeInsets.only(
-                    bottom: 20.0, left: 20.0, right: 20.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    GestureDetector(
-                      onTap: () {
-                        if (gameHasStarted == false) {
-                          startGame();
-                        }
-                      },
-                      child: const Text(
-                        's t a r t',
-                        style: TextStyle(color: Colors.grey, fontSize: 20),
-                      ),
-                    ),
-                  ],
-                ),
-              ),*/
-              /* child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: Consts.numberOfSquares,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: Consts.rowCount,
-                    ),
-                    itemBuilder: (context, index) => createTile(
-                      snakePosition: snakePosition,
-                      index: index,
-                      food: food,
-                      direction: direction
-                    ),
-                  ),
-                ),*/
+              ),
               StartGameButton(onPress: (!gameHasStarted) ? startGame : () {})
             ],
           ),
