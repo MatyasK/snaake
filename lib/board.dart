@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:snaake/snake.dart';
 
 class BoardTile extends StatelessWidget {
   const BoardTile({
@@ -6,56 +9,13 @@ class BoardTile extends StatelessWidget {
     required this.isOdd,
     required this.index,
     required this.boardTileType,
+    required this.direction,
   });
 
   final bool isOdd;
   final int index;
+  final SnakeDirection direction;
   final BoardTileType boardTileType;
-
-  static BoardTile createTile({
-    required List<int> snakePosition,
-    required int index,
-    required int food,
-  }) {
-    if (snakePosition.contains(index)) {
-      // Check if this is the head of snake
-      if (index == snakePosition.last) {
-        return BoardTile(
-          isOdd: index.isOdd,
-          boardTileType: BoardTileType.snakeHead,
-          index: index,
-        );
-      }
-
-      // Check if this is the tail of snake
-      if (index == snakePosition.first) {
-        return BoardTile(
-          isOdd: index.isOdd,
-          boardTileType: BoardTileType.snakeTail,
-          index: index,
-        );
-      }
-
-      return BoardTile(
-        isOdd: index.isOdd,
-        boardTileType: BoardTileType.snakeBody,
-        index: index,
-      );
-    }
-
-    if (index == food) {
-      return BoardTile(
-        isOdd: index.isOdd,
-        boardTileType: BoardTileType.food,
-        index: index,
-      );
-    }
-    return BoardTile(
-      isOdd: index.isOdd,
-      boardTileType: BoardTileType.empty,
-      index: index,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,12 +25,14 @@ class BoardTile extends StatelessWidget {
         child: Container(
           color: isOdd ? Colors.blueGrey : Colors.grey,
           child: boardTileType.isElement
-              ? Image.asset(
-                  boardTileType.assetPath,
-                  height: 100,
-                  width: 100,
-                  fit: BoxFit.contain,
-                )
+              ? (boardTileType != BoardTileType.snakeHead)
+                  ? Image.asset(
+                      boardTileType.assetPath,
+                      height: 100,
+                      width: 100,
+                      fit: BoxFit.contain,
+                    )
+                  : _createSnakeHead(type: boardTileType, direction: direction)
               : const SizedBox(
                   height: 100,
                   width: 100,
@@ -79,6 +41,36 @@ class BoardTile extends StatelessWidget {
       ),
     );
   }
+
+  Widget _createSnakeHead({required BoardTileType type, required SnakeDirection direction}) {
+    return Transform(
+      alignment: FractionalOffset.center,
+      transform: _getMatrix(direction: direction),
+      child: Image.asset(
+        type.assetPath,
+        height: 100,
+        width: 100,
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+
+  Matrix4 _getMatrix({required SnakeDirection direction}) {
+    if (direction.isDown) {
+      return Matrix4.rotationZ(270 * pi / 180);
+    }
+    if (direction.isUp) {
+      return Matrix4.rotationZ(pi / 2);
+    }
+    if (direction.isRight) {
+      return Matrix4.rotationY(pi);
+    }
+    return Matrix4.rotationY(pi * 180);
+  } /*
+  SnakeDirection.up() : transform =
+  SnakeDirection.down() : transform =
+  SnakeDirection.left() : transform =  Matrix4.rotationY(pi * 180);
+  SnakeDirection.right() : transform =*/
 }
 
 enum BoardTileType {
@@ -91,4 +83,50 @@ enum BoardTileType {
   final bool isElement;
   final String assetPath;
   const BoardTileType(this.isElement, this.assetPath);
+}
+
+BoardTile createTile({
+  required List<int> snakePosition,
+  required int index,
+  required int food,
+  required SnakeDirection direction,
+}) {
+  if (snakePosition.contains(index)) {
+    // Check if this is the head of snake
+    if (index == snakePosition.last) {
+      return BoardTile(
+        isOdd: index.isOdd,
+        boardTileType: BoardTileType.snakeHead,
+        index: index, direction: direction,
+      );
+    }
+
+    // Check if this is the tail of snake
+    if (index == snakePosition.first) {
+      return BoardTile(
+        isOdd: index.isOdd,
+        boardTileType: BoardTileType.snakeTail,
+        index: index, direction: direction,
+      );
+    }
+
+    return BoardTile(
+      isOdd: index.isOdd,
+      boardTileType: BoardTileType.snakeBody,
+      index: index, direction: direction,
+    );
+  }
+
+  if (index == food) {
+    return BoardTile(
+      isOdd: index.isOdd,
+      boardTileType: BoardTileType.food,
+      index: index, direction: direction,
+    );
+  }
+  return BoardTile(
+    isOdd: index.isOdd,
+    boardTileType: BoardTileType.empty,
+    index: index, direction: direction,
+  );
 }

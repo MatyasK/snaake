@@ -1,8 +1,9 @@
+
 enum SnakeDirection {
   up,
   down,
   left,
-  right,
+  right;
 }
 
 extension SnakeDirectionText on SnakeDirection {

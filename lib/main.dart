@@ -169,10 +169,11 @@ class _HomePageState extends State<HomePage> {
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: Consts.rowCount,
                     ),
-                    itemBuilder: (context, index) => BoardTile.createTile(
+                    itemBuilder: (context, index) => createTile(
                       snakePosition: snakePosition,
                       index: index,
-                      food: food
+                      food: food,
+                      direction: direction
                     ),
                   ),
                 ),
