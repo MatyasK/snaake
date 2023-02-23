@@ -85,7 +85,7 @@ class _HomePageState extends State<HomePage> {
   int columnCount = 10;
   bool gameHasStarted = false;
   int currentRow = 0;
-
+  Timer? timer;
   static var randomNumber = Random();
   int food = randomNumber.nextInt(numberOfSquares - 1);
 
@@ -97,13 +97,34 @@ class _HomePageState extends State<HomePage> {
     gameHasStarted = true;
     snakePosition = [45, 65, 85, 105, 125];
     const duration = Duration(milliseconds: 150);
-    Timer.periodic(duration, (Timer timer) {
+    timer = Timer.periodic(duration, (Timer timer) {
       updateSnake();
       if (gameOver()) {
         timer.cancel();
         _showGameOverScreen();
       }
     });
+  }
+
+  // Pause Game
+  void pauseToggleGame() {
+    if (gameHasStarted) {
+      gameHasStarted = false;
+
+      if (timer != null) {
+        timer!.cancel();
+      }
+    } else {
+      gameHasStarted = true;
+      const duration = Duration(milliseconds: 150);
+      timer = Timer.periodic(duration, (Timer timer) {
+        updateSnake();
+        if (gameOver()) {
+          timer.cancel();
+          _showGameOverScreen();
+        }
+      });
+    }
   }
 
   SnakeDirection direction = SnakeDirection.down;
@@ -209,7 +230,9 @@ class _HomePageState extends State<HomePage> {
                         Text('x ${snakePosition.length - 5}')
                       ],
                     ),
-                    IconButton(onPressed: () {}, icon: const Icon(Icons.pause))
+                    IconButton(
+                        onPressed: pauseToggleGame,
+                        icon: const Icon(Icons.pause))
                   ],
                 ),
               ),
