@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
       updateSnake();
       if (gameOver()) {
         timer.cancel();
-        _showGameOverScreen();
+        _showGameOverPopUp();
       }
     });
   }
@@ -121,7 +121,7 @@ class _HomePageState extends State<HomePage> {
         updateSnake();
         if (gameOver()) {
           timer.cancel();
-          _showGameOverScreen();
+          _showGameOverPopUp();
         }
       });
     }
@@ -185,22 +185,34 @@ class _HomePageState extends State<HomePage> {
     return false;
   }
 
-  void _showGameOverScreen() {
+  void _showGameOverPopUp() {
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('GAME OVER'),
-            content: Text('You\'re score: ${snakePosition.length}'),
-            actions: <Widget>[
-              ElevatedButton(
-                child: const Text('Play Again'),
-                onPressed: () {
-                  startGame();
-                  Navigator.of(context).pop();
-                },
-              )
-            ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('ChainCargo Snake'),
+                const SizedBox(height: 10),
+                const Text('GameOver'),
+                const SizedBox(height: 10),
+                const Text('Your score'),
+                Text('${snakePosition.length - 5}'),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      startGame();
+                    },
+                    child: const Text('Try Again')),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      startGame();
+                    },
+                    child: const Text('Quite Game')),
+              ],
+            ),
           );
         });
   }
@@ -232,7 +244,9 @@ class _HomePageState extends State<HomePage> {
                     ),
                     IconButton(
                         onPressed: pauseToggleGame,
-                        icon: const Icon(Icons.pause))
+                        icon: gameHasStarted
+                            ? const Icon(Icons.pause)
+                            : const Icon(Icons.play_arrow))
                   ],
                 ),
               ),
