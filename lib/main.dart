@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,6 +20,18 @@ enum BoardTileType {
   snakeBody,
   snakeTail,
   food,
+}
+
+class Observer extends BlocObserver {
+  /// {@macro counter_observer}
+  const Observer();
+
+  @override
+  void onChange(BlocBase<dynamic> bloc, Change<dynamic> change) {
+    super.onChange(bloc, change);
+    // ignore: avoid_print
+    print('${bloc.runtimeType} $change');
+  }
 }
 
 extension BoardTileBody on BoardTileType {
@@ -69,8 +82,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   static List<int> snakePosition = [45, 65, 85, 105, 125];
   static int numberOfSquares = 100;
-  int numberInRow = 10;
+  int columnCount = 10;
   bool gameHasStarted = false;
+  int currentRow = 0;
 
   static var randomNumber = Random();
   int food = randomNumber.nextInt(numberOfSquares - 1);
@@ -96,32 +110,32 @@ class _HomePageState extends State<HomePage> {
   void updateSnake() {
     setState(() {
       if (direction.isDown) {
-        if (snakePosition.last > numberOfSquares - numberInRow) {
-          snakePosition.add(snakePosition.last + numberInRow - numberOfSquares);
+        if (snakePosition.last > numberOfSquares - columnCount) {
+          snakePosition.add(snakePosition.last + columnCount - numberOfSquares);
         } else {
-          snakePosition.add(snakePosition.last + numberInRow);
+          snakePosition.add(snakePosition.last + columnCount);
         }
       }
 
       if (direction.isUp) {
-        if (snakePosition.last < numberInRow) {
-          snakePosition.add(snakePosition.last - numberInRow + numberOfSquares);
+        if (snakePosition.last < columnCount) {
+          snakePosition.add(snakePosition.last - columnCount + numberOfSquares);
         } else {
-          snakePosition.add(snakePosition.last - numberInRow);
+          snakePosition.add(snakePosition.last - columnCount);
         }
       }
 
       if (direction.isLeft) {
-        if (snakePosition.last % numberInRow == 0) {
-          snakePosition.add(snakePosition.last - 1 + numberInRow);
+        if (snakePosition.last % columnCount == 0) {
+          snakePosition.add(snakePosition.last - 1 + columnCount);
         } else {
           snakePosition.add(snakePosition.last - 1);
         }
       }
 
       if (direction.isRight) {
-        if ((snakePosition.last + 1) % numberInRow == 0) {
-          snakePosition.add(snakePosition.last + 1 - numberInRow);
+        if ((snakePosition.last + 1) % columnCount == 0) {
+          snakePosition.add(snakePosition.last + 1 - columnCount);
         } else {
           snakePosition.add(snakePosition.last + 1);
         }
@@ -173,13 +187,32 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //appBar: AppBar(),
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.green,
+      appBar: AppBar(
+        title: const Text('ChainCargo'),
+        centerTitle: true,
+        backgroundColor: Colors.green,
+      ),
       body: Center(
         child: SizedBox(
           width: double.infinity,
           child: Column(
             children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Image(image: AssetImage('assets/pallet.png')),
+                        Text('x ${snakePosition.length - 5}')
+                      ],
+                    ),
+                    IconButton(onPressed: () {}, icon: const Icon(Icons.pause))
+                  ],
+                ),
+              ),
               Expanded(
                 child: GestureDetector(
                   onVerticalDragUpdate: (details) {
@@ -196,47 +229,57 @@ class _HomePageState extends State<HomePage> {
                       direction = SnakeDirection.left;
                     }
                   },
-                  child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: numberOfSquares,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: numberInRow),
-                      itemBuilder: (BuildContext context, int index) {
-                        if (snakePosition.contains(index)) {
-                          // Check if this is the head of snake
-                          if (index == snakePosition.last) {
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: GridView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: numberOfSquares,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: columnCount),
+                        itemBuilder: (BuildContext context, int index) {
+                          if (index % columnCount == 0) {
+                            currentRow += 1;
+                          }
+                          
+                          // reverse value on every other row
+                          bool isGrey = (index % 2 == 0) ? true : false;
+
+                          if (snakePosition.contains(index)) {
+                            // Check if this is the head of snake
+                            if (index == snakePosition.last) {
+                              return BoardTile(
+                                isOdd: isGrey,
+                                boardTileType: BoardTileType.snakeHead,
+                              );
+                            }
+
+                            // Check if this is the tail of snake
+                            if (index == snakePosition.first) {
+                              return BoardTile(
+                                isOdd: isGrey,
+                                boardTileType: BoardTileType.snakeTail,
+                              );
+                            }
+
                             return BoardTile(
-                              isOdd: index.isOdd,
-                              boardTileType: BoardTileType.snakeHead,
+                              isOdd: isGrey,
+                              boardTileType: BoardTileType.snakeBody,
                             );
                           }
 
-                          // Check if this is the tail of snake
-                          if (index == snakePosition.first) {
+                          if (index == food) {
                             return BoardTile(
-                              isOdd: index.isOdd,
-                              boardTileType: BoardTileType.snakeTail,
+                              isOdd: isGrey,
+                              boardTileType: BoardTileType.food,
+                            );
+                          } else {
+                            return BoardTile(
+                              isOdd: isGrey,
+                              boardTileType: BoardTileType.empty,
                             );
                           }
-
-                          return BoardTile(
-                            isOdd: index.isOdd,
-                            boardTileType: BoardTileType.snakeBody,
-                          );
-                        }
-
-                        if (index == food) {
-                          return BoardTile(
-                            isOdd: index.isOdd,
-                            boardTileType: BoardTileType.food,
-                          );
-                        } else {
-                          return BoardTile(
-                            isOdd: index.isOdd,
-                            boardTileType: BoardTileType.empty,
-                          );
-                        }
-                      }),
+                        }),
+                  ),
                 ),
               ),
               Padding(
@@ -281,7 +324,7 @@ class BoardTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(5),
+        // borderRadius: BorderRadius.circular(5),
         child: Container(
             color: isOdd ? Colors.blueGrey : Colors.grey,
             child: boardTileType.isSnake
