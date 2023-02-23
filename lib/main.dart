@@ -240,9 +240,12 @@ class _HomePageState extends State<HomePage> {
                           if (index % columnCount == 0) {
                             currentRow += 1;
                           }
-                          
-                          // reverse value on every other row
                           bool isGrey = (index % 2 == 0) ? true : false;
+
+                          if (currentRow.isOdd) {
+                            isGrey = !isGrey;
+                          }
+                          // reverse value on every other row
 
                           if (snakePosition.contains(index)) {
                             // Check if this is the head of snake
