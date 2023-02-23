@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:snaake/snake.dart';
 import 'package:snaake/start_game_button.dart';
 import 'package:snaake/utils/consts.dart';
@@ -34,12 +35,26 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      // your method where use the context
+      // Example navigate:
+      showStartGamePopUp;
+    });
+
+    // if (mounted) {
+    //   showStartGamePopUp();
+    // }
+  }
+
   static List<int> snakePosition = [0, 1, 2, 3, 4];
   static final randomNumber = Random();
   SnakeDirection direction = SnakeDirection.right;
   bool gameHasStarted = false;
   int columnCount = 10;
-
 
   Timer? timer;
   int food = randomNumber.nextInt(Consts.numberOfSquares - 1);
@@ -57,6 +72,30 @@ class _HomePageState extends State<HomePage> {
         _showGameOverPopUp();
       }
     });
+  }
+
+  void showStartGamePopUp() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('ChainCargo Snake'),
+                const SizedBox(height: 10),
+                const Text('Start Game'),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      startGame();
+                    },
+                    child: const Text('Start Game')),
+              ],
+            ),
+          );
+        });
   }
 
   // Pause Game
@@ -225,7 +264,8 @@ class _HomePageState extends State<HomePage> {
                     child: GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: Consts.numberOfSquares,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: Consts.rowCount,
                       ),
                       itemBuilder: (BuildContext context, int index) =>
@@ -237,7 +277,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-              ),/*
+              ),
+              /*
               Padding(
                 padding: const EdgeInsets.only(
                     bottom: 20.0, left: 20.0, right: 20.0),
