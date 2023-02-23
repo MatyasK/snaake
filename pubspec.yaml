@@ -29,6 +29,10 @@ flutter:
     - assets/front.png
     - assets/tail.png
     - assets/pallet.png
+    - assets/game_logo.png
+    - assets/game_over.png
+    - assets/leaders_board.png
+    - assets/start_game.png
 
   
   

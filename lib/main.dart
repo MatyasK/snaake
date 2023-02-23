@@ -39,11 +39,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      // your method where use the context
-      // Example navigate:
-      showStartGamePopUp;
-    });
+    SchedulerBinding.instance
+        .addPostFrameCallback((_) => showStartGamePopUp(context));
 
     // if (mounted) {
     //   showStartGamePopUp();
@@ -74,7 +71,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void showStartGamePopUp() {
+  void showStartGamePopUp(BuildContext context) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -82,9 +79,9 @@ class _HomePageState extends State<HomePage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('ChainCargo Snake'),
+                Image(image: Image.asset('assets/game_logo.png').image),
                 const SizedBox(height: 10),
-                const Text('Start Game'),
+                Image(image: Image.asset('assets/start_game.png').image),
                 const SizedBox(height: 10),
                 ElevatedButton(
                     onPressed: () {
@@ -315,7 +312,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),*/
-              StartGameButton(onPress: (!gameHasStarted) ? startGame : () {})
             ],
           ),
         ),
