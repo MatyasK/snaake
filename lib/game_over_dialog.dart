@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snaake/utils/colors.dart';
 
 class GameOverDialog extends StatelessWidget {
   final String score;
@@ -14,42 +15,30 @@ class GameOverDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color.fromRGBO(141, 171, 81, 1),
+      backgroundColor: ccaGreen,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('ChainCargo Snake'),
+          Image(image: Image.asset('assets/game_logo.png').image),
           const SizedBox(height: 10),
-          const Text('GameOver'),
+          Image(image: Image.asset('assets/game_over.png').image),
           const SizedBox(height: 10),
           const Text('Your score'),
           Text(score),
           ElevatedButton(
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(
-                  const Color.fromRGBO(
-                    34,
-                    65,
-                    82,
-                    1,
-                  ),
-                ),
+                backgroundColor: MaterialStateProperty.all<Color>(buttonColor),
               ),
               onPressed: () => onPlayAgain(),
               child: const Text('Try Again')),
           ElevatedButton(
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all<Color>(
-                  const Color.fromRGBO(
-                    34,
-                    65,
-                    82,
-                    1,
-                  ),
+                  buttonColor,
                 ),
               ),
               onPressed: () => onQuit(),
-              child: const Text('Quite Game')),
+              child: const Text('Quiote Game')),
         ],
       ),
     );

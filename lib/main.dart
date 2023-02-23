@@ -3,8 +3,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:snaake/snake.dart';
-import 'package:snaake/start_game_button.dart';
+import 'package:snaake/utils/colors.dart';
 import 'package:snaake/utils/consts.dart';
 
 import 'board.dart';
@@ -35,11 +36,24 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+
+    SchedulerBinding.instance
+        .addPostFrameCallback((_) => showStartGamePopUp(context));
+
+    // if (mounted) {
+    //   showStartGamePopUp();
+    // }
+  }
+
   static List<int> snakePosition = [0, 1, 2, 3, 4];
   static final randomNumber = Random();
   SnakeDirection direction = SnakeDirection.right;
   bool gameHasStarted = false;
   int columnCount = 10;
+  int currentRow = 0;
 
   Timer? timer;
   int food = randomNumber.nextInt(Consts.numberOfSquares - 1);
@@ -49,8 +63,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void startGame() {
+    direction = SnakeDirection.right;
     gameHasStarted = true;
-    Timer.periodic(const Duration(milliseconds: 150), (timer) {
+    timer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
       updateSnake();
       if (gameOver()) {
         timer.cancel();
@@ -59,10 +74,41 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void showStartGamePopUp(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: ccaGreen,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image(image: Image.asset('assets/game_logo.png').image),
+                const SizedBox(height: 10),
+                Image(image: Image.asset('assets/start_game.png').image),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(buttonColor),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      startGame();
+                    },
+                    child: const Text('Start Game')),
+              ],
+            ),
+          );
+        });
+  }
+
   // Pause Game
   void pauseToggleGame() {
     if (gameHasStarted) {
       gameHasStarted = false;
+
+      setState(() {});
 
       if (timer != null) {
         timer!.cancel();
@@ -157,15 +203,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green,
+      backgroundColor: ccaGreen,
       appBar: AppBar(
         title: const Text('ChainCargo'),
         centerTitle: true,
-        backgroundColor: Colors.green,
+        backgroundColor: ccaGreen,
       ),
       body: Center(
         child: SizedBox(
@@ -210,22 +255,34 @@ class _HomePageState extends State<HomePage> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: Consts.numberOfSquares,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: Consts.rowCount,
-                      ),
-                      itemBuilder: (context, index) => createTile(
-                          snakePosition: snakePosition,
-                          index: index,
-                          food: food,
-                          direction: direction),
-                    ),
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: Consts.numberOfSquares,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: Consts.rowCount,
+                        ),
+                        itemBuilder: (context, index) {
+                          // increase the current row on every 11th tile
+                          if (index % Consts.rowCount == 0) {
+                            currentRow += 1;
+                          }
+
+                          bool isGray = index.isOdd;
+
+                          if (currentRow.isEven) {
+                            isGray = !isGray;
+                          }
+
+                          return createTile(
+                              snakePosition: snakePosition,
+                              index: index,
+                              isGrey: isGray,
+                              food: food,
+                              direction: direction);
+                        }),
                   ),
                 ),
               ),
-              StartGameButton(onPress: (!gameHasStarted) ? startGame : () {})
             ],
           ),
         ),
