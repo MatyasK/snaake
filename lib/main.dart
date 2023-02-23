@@ -5,10 +5,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:snaake/snake.dart';
-import 'package:snaake/start_game_button.dart';
+import 'package:snaake/utils/colors.dart';
 import 'package:snaake/utils/consts.dart';
 
 import 'board.dart';
+import 'game_over_dialog.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +53,7 @@ class _HomePageState extends State<HomePage> {
   SnakeDirection direction = SnakeDirection.right;
   bool gameHasStarted = false;
   int columnCount = 10;
+  int currentRow = 0;
 
   Timer? timer;
   int food = randomNumber.nextInt(Consts.numberOfSquares - 1);
@@ -61,8 +63,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void startGame() {
+    direction = SnakeDirection.right;
     gameHasStarted = true;
-    Timer.periodic(const Duration(milliseconds: 150), (timer) {
+    timer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
       updateSnake();
       if (gameOver()) {
         timer.cancel();
@@ -76,6 +79,7 @@ class _HomePageState extends State<HomePage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
+            backgroundColor: ccaGreen,
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -84,6 +88,10 @@ class _HomePageState extends State<HomePage> {
                 Image(image: Image.asset('assets/start_game.png').image),
                 const SizedBox(height: 10),
                 ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor:
+                          MaterialStateProperty.all<Color>(buttonColor),
+                    ),
                     onPressed: () {
                       Navigator.of(context).pop();
                       startGame();
@@ -99,6 +107,8 @@ class _HomePageState extends State<HomePage> {
   void pauseToggleGame() {
     if (gameHasStarted) {
       gameHasStarted = false;
+
+      setState(() {});
 
       if (timer != null) {
         timer!.cancel();
@@ -177,44 +187,30 @@ class _HomePageState extends State<HomePage> {
 
   void _showGameOverPopUp() {
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('ChainCargo Snake'),
-                const SizedBox(height: 10),
-                const Text('GameOver'),
-                const SizedBox(height: 10),
-                const Text('Your score'),
-                Text('${snakePosition.length - 5}'),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      startGame();
-                    },
-                    child: const Text('Try Again')),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      startGame();
-                    },
-                    child: const Text('Quite Game')),
-              ],
-            ),
-          );
-        });
+      context: context,
+      builder: (BuildContext context) => GameOverDialog(
+        score: '${snakePosition.length - 5}',
+        onPlayAgain: () {
+          Navigator.of(context).pop();
+          snakePosition.length = 5;
+          snakePosition = [0, 1, 2, 3, 4];
+          startGame();
+        },
+        onQuit: () {
+          //TODO: move to real app
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green,
+      backgroundColor: ccaGreen,
       appBar: AppBar(
         title: const Text('ChainCargo'),
         centerTitle: true,
-        backgroundColor: Colors.green,
+        backgroundColor: ccaGreen,
       ),
       body: Center(
         child: SizedBox(
@@ -259,59 +255,34 @@ class _HomePageState extends State<HomePage> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: Consts.numberOfSquares,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: Consts.rowCount,
-                      ),
-                      itemBuilder: (BuildContext context, int index) =>
-                          createTile(
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: Consts.numberOfSquares,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: Consts.rowCount,
+                        ),
+                        itemBuilder: (context, index) {
+                          // increase the current row on every 11th tile
+                          if (index % Consts.rowCount == 0) {
+                            currentRow += 1;
+                          }
+
+                          bool isGray = index.isOdd;
+
+                          if (currentRow.isEven) {
+                            isGray = !isGray;
+                          }
+
+                          return createTile(
                               snakePosition: snakePosition,
                               index: index,
+                              isGrey: isGray,
                               food: food,
-                              direction: direction),
-                    ),
+                              direction: direction);
+                        }),
                   ),
                 ),
               ),
-              /*
-              Padding(
-                padding: const EdgeInsets.only(
-                    bottom: 20.0, left: 20.0, right: 20.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    GestureDetector(
-                      onTap: () {
-                        if (gameHasStarted == false) {
-                          startGame();
-                        }
-                      },
-                      child: const Text(
-                        's t a r t',
-                        style: TextStyle(color: Colors.grey, fontSize: 20),
-                      ),
-                    ),
-                  ],
-                ),
-              ),*/
-              /* child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: Consts.numberOfSquares,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: Consts.rowCount,
-                    ),
-                    itemBuilder: (context, index) => createTile(
-                      snakePosition: snakePosition,
-                      index: index,
-                      food: food,
-                      direction: direction
-                    ),
-                  ),
-                ),*/
             ],
           ),
         ),
